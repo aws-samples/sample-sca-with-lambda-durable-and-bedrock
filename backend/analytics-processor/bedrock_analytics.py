@@ -6,6 +6,7 @@ using Amazon Bedrock with durable execution for resilient processing.
 """
 
 import json
+import os
 import time
 from typing import Dict, List, Any, Optional, Iterator
 from datetime import datetime
@@ -13,6 +14,29 @@ from decimal import Decimal
 
 import boto3
 from botocore.exceptions import ClientError
+
+
+def extract_json_from_response(text: str) -> str:
+    """Extract JSON object from Bedrock response, ignoring surrounding text."""
+    text = text.strip()
+    if text.startswith("```"):
+        lines = text.split("\n")
+        lines = [l for l in lines if not l.strip().startswith("```")]
+        text = "\n".join(lines).strip()
+    start = text.find('{')
+    if start == -1:
+        return text
+    depth = 0
+    for i in range(start, len(text)):
+        if text[i] == '{':
+            depth += 1
+        elif text[i] == '}':
+            depth -= 1
+            if depth == 0:
+                return text[start:i + 1]
+    return text[start:]
+
+
 from aws_lambda_powertools import Logger, Metrics
 from aws_lambda_powertools.metrics import MetricUnit
 from aws_durable_execution_sdk_python import StepContext, durable_step
@@ -25,7 +49,7 @@ metrics = Metrics()
 bedrock_runtime = boto3.client('bedrock-runtime')
 
 # Model configurations
-CLAUDE_MODEL_ID = "anthropic.claude-3-haiku-20240307-v1:0"
+CLAUDE_MODEL_ID = os.environ.get('BEDROCK_MODEL_ID', "us.anthropic.claude-haiku-4-5-20251001-v1:0")
 MAX_RETRIES = 3
 RETRY_DELAY_SECONDS = 2
 
@@ -149,7 +173,7 @@ IMPORTANT: Include a sentiment entry for EVERY line in the conversation."""
             content = response_body['content'][0]['text']
             
             # Parse JSON response
-            sentiment_data = json.loads(content)
+            sentiment_data = json.loads(extract_json_from_response(content))
             
             # Ensure sentiment has a default value if not found
             if not sentiment_data.get('overall'):
@@ -265,7 +289,7 @@ Respond in JSON format:
             content = response_body['content'][0]['text']
             
             # Parse JSON response
-            topics_data = json.loads(content)
+            topics_data = json.loads(extract_json_from_response(content))
             topics = topics_data.get('topics', [])
             
             self.logger.info(

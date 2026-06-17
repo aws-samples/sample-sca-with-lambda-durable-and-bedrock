@@ -230,6 +230,7 @@ export class ScaBackendStack extends cdk.Stack {
       environment: {
         TRANSCRIPTIONS_TABLE: this.transcriptionsTable.tableName,
         ANALYTICS_TABLE: this.analyticsTable.tableName,
+        BEDROCK_MODEL_ID: 'anthropic.claude-haiku-4-5-20251001-v1:0',
         POWERTOOLS_SERVICE_NAME: 'analytics-processor',
         POWERTOOLS_METRICS_NAMESPACE: 'SCA',
         LOG_LEVEL: 'INFO',
@@ -608,6 +609,19 @@ export class ScaBackendStack extends cdk.Stack {
           id: 'AwsSolutions-COG3',
           reason: 'Advanced Security Mode is not enabled to reduce costs for this solution. ' +
                   'For production deployments, enable ENFORCED mode for malicious sign-in detection.',
+        },
+      ]
+    );
+
+    // Suppress Cognito Plus tier requirement
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      '/ScaBackendStack/UserPool/Resource',
+      [
+        {
+          id: 'AwsSolutions-COG8',
+          reason: 'Plus tier is not required for this solution. ' +
+                  'For production deployments with sensitive data, consider enabling Plus tier for advanced security features.',
         },
       ]
     );
