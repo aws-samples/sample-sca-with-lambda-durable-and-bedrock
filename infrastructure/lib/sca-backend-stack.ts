@@ -230,7 +230,7 @@ export class ScaBackendStack extends cdk.Stack {
       environment: {
         TRANSCRIPTIONS_TABLE: this.transcriptionsTable.tableName,
         ANALYTICS_TABLE: this.analyticsTable.tableName,
-        BEDROCK_MODEL_ID: 'anthropic.claude-haiku-4-5-20251001-v1:0',
+        BEDROCK_MODEL_ID: 'us.anthropic.claude-haiku-4-5-20251001-v1:0',
         POWERTOOLS_SERVICE_NAME: 'analytics-processor',
         POWERTOOLS_METRICS_NAMESPACE: 'SCA',
         LOG_LEVEL: 'INFO',
